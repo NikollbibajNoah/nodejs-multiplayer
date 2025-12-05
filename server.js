@@ -51,6 +51,15 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('chatMessage', (msg) => {
+        io.emit('chatMessage', {
+            id: socket.id,
+            name: players[socket.id].name,
+            message: msg,
+            color: players[socket.id].color
+        });
+    })
+
     socket.on('disconnect', () => {
         console.log('Player disconnected:', socket.id);
 

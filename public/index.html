@@ -14,6 +14,18 @@
     </div>
     <canvas width="800" height="600"></canvas>
 
+    <div class="w-md shadow mt-5">
+        <h3 class="text-lg font-semibold">Chat</h3>
+        <div class="p-4 space-y-3" id="chatBox">
+            <!-- Chats goes in here -->
+        </div>
+
+        <div>
+            <input id="chatInput" class="bg-white rounded p-2 w-3/4" placeholder="Type a message..." />
+            <button class="bg-blue-500 rounded p-2 text-white" id="sendBtn">Send</button>
+        </div>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>
 </body>

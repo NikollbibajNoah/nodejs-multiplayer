@@ -12,8 +12,14 @@ let playerName = "";
 const inputField = document.getElementById('nameInput');
 const button = document.getElementById('startBtn');
 
-button.addEventListener('click', connect);
+const chatInput = document.getElementById('chatInput');
+const sendButton = document.getElementById('sendBtn');
 
+button.addEventListener('click', connect);
+sendButton.addEventListener('click', () => {
+    sendMessage(chatInput.value);
+    chatInput.value = "";
+});
 
 function connect() {
     const enteredName = inputField.value.trim();
@@ -34,9 +40,7 @@ function connect() {
     socket.on('connect', () => {
         console.log('Connected to server:', enteredName);
     });
-
         
-
     socket.on('connect', () => {
         myId = socket.id;
     });
@@ -51,6 +55,11 @@ function connect() {
         console.log('New player connected:', playerName);
     });
 
+    socket.on('chatMessage', (data) => {
+        const chat = document.getElementById('chatBox');
+        chat.innerHTML += `<div><span style="color:${data.color}">${data.name}:</span> ${data.message}</div>`;
+    })
+
     socket.on('playerMoved', (data) => {
         if (players[data.id]) {
             players[data.id].x = data.x;
@@ -64,6 +73,10 @@ function connect() {
 
 
     document.getElementById('overlay').style.display = 'none';
+}
+
+function sendMessage(msg) {
+    socket.emit('chatMessage', msg);
 }
 
 let input = {
