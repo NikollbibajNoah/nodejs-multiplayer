@@ -1,0 +1,17 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+canvas { background: #1e1e1e; display: block; }
+
+.overlay {
+    width: 800px;
+    height: 600px;
+    background: black;
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
