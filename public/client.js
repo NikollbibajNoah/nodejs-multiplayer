@@ -21,6 +21,35 @@ sendButton.addEventListener('click', () => {
     chatInput.value = "";
 });
 
+let startX, startY;
+
+canvas.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+
+    startX = touch.clientX;
+    startY = touch.clientY;
+});
+
+
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+
+    const touch = e.touches[0];
+
+    const dx = touch.clientX - startX;
+    const dy = touch.clientY - startY;
+
+    input.up = dy < -30;
+    input.down = dy > 30;
+    input.left = dx < -30;
+    input.right = dx > 30;
+});
+
+canvas.addEventListener('touchend', (e) => {
+    input.up = input.down = input.left = input.right = false;
+});
+
+
 function connect() {
     const enteredName = inputField.value.trim();
 
@@ -36,13 +65,10 @@ function connect() {
             name: enteredName
         }
     });
-
-    socket.on('connect', () => {
-        console.log('Connected to server:', enteredName);
-    });
         
     socket.on('connect', () => {
         myId = socket.id;
+        console.log('Connected to server:', enteredName);
     });
 
     socket.on('currentPlayers', (data) => {
@@ -75,6 +101,18 @@ function connect() {
     document.getElementById('overlay').style.display = 'none';
 }
 
+function resizeCanvas() {
+    if (isMobile()) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    } else {
+        canvas.width = 800;
+        canvas.height = 600;
+    }
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
 function sendMessage(msg) {
     socket.emit('chatMessage', msg);
 }
@@ -100,6 +138,10 @@ document.addEventListener('keyup', (e) => {
     if (e.key === "a") input.left = false;
     if (e.key === "d") input.right = false;
 });
+
+function isMobile() {
+    return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+}
 
 function gameloop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);

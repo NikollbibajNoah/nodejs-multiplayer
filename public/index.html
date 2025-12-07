@@ -9,10 +9,15 @@
 </head>
 <body>
     <div class="overlay" id="overlay">
-        <input id="nameInput" class="bg-white rounded p-4" placeholder="Wie lautet dein Name!" />
+        <input id="nameInput" class="bg-white rounded p-4" placeholder="Wie lautet dein Name!" onkeydown="if (event.key === 'Enter') { connect(); }" />
         <button class="bg-teal-500 rounded p-4 text-white" id="startBtn">Bestätigen</button>
     </div>
-    <canvas width="800" height="600"></canvas>
+
+    <!-- Game screen -->
+    <canvas>
+        
+    </canvas>
+    
 
     <div class="w-md shadow mt-5">
         <h3 class="text-lg font-semibold">Chat</h3>
