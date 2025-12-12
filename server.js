@@ -18,24 +18,26 @@ let players = {};
 
 io.on('connection', (socket) => {
     const playerName = socket.handshake.auth.name || "Anonymous";
+    const room = socket.handshake.auth.room || "default";
     
-    console.log('Player connected:', socket.id);
+    console.log('Player connected:', socket.id, 'to room:', room);
+
+    socket.join(room);
 
     // Initialize player state
     players[socket.id] = new Player(socket.id, playerName);
+    players[socket.id].room = room;
 
     // Notify the new player of existing players
-    socket.emit('currentPlayers', Object.fromEntries(
-        Object.entries(players).map(([id, player]) => [id, player.toJSON()])
-    ));
+    socket.emit('currentPlayers', getPlayersInRoom(room));
 
     // Notify all players of the new player
-    socket.broadcast.emit('newPlayer', {
+    socket.to(room).emit('newPlayer', {
         id: socket.id,
         ...players[socket.id].toJSON() //x, y, color
     });
 
-    console.log('New player connected:', playerName);
+    console.log('New player', playerName, "in room", room);
 
     // Update pos
     socket.on('move', (data) => {
@@ -44,7 +46,7 @@ io.on('connection', (socket) => {
             players[socket.id].move(data.x, data.y);
 
             // Broadcast updated position to all players
-            socket.broadcast.emit('playerMoved', {
+            socket.to(room).emit('playerMoved', {
                 id: socket.id,
                 x: data.x,
                 y: data.y
@@ -53,7 +55,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('chatMessage', (msg) => {
-        io.emit('chatMessage', {
+        io.to(room).emit('chatMessage', {
             id: socket.id,
             name: players[socket.id].name,
             message: msg,
@@ -66,9 +68,21 @@ io.on('connection', (socket) => {
 
         delete players[socket.id];
 
-        io.emit('playerDisconnected', socket.id);
+        io.to(room).emit('playerDisconnected', socket.id);
     });
 });
+
+function getPlayersInRoom(room) {
+    const roomPlayers = {};
+
+    for (let id in players) {
+        if (players[id].room === room) {
+            roomPlayers[id] = players[id].toJSON();
+        }
+    }
+
+    return roomPlayers;
+}
 
 server.listen(3000, '0.0.0.0', () => {
     console.log(`Server running on http://${host}:3000`);

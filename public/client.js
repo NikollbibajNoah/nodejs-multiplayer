@@ -8,8 +8,10 @@ let myId = null;
 const speed = 5;
 
 let playerName = "";
+let roomName = "";
 
 const inputField = document.getElementById('nameInput');
+const roomInputField = document.getElementById('roomInput');
 const button = document.getElementById('startBtn');
 
 const chatInput = document.getElementById('chatInput');
@@ -52,6 +54,7 @@ canvas.addEventListener('touchend', (e) => {
 
 function connect() {
     const enteredName = inputField.value.trim();
+    const enteredRoom = roomInputField.value.trim().toUpperCase();
 
     if (enteredName === "") {
         alert("Please enter a name to start the game.");
@@ -59,16 +62,18 @@ function connect() {
     }
 
     playerName = enteredName;
+    roomName = enteredRoom || null;
 
     socket = io({
         auth: {
-            name: enteredName
+            name: enteredName,
+            room: enteredRoom
         }
     });
         
     socket.on('connect', () => {
         myId = socket.id;
-        console.log('Connected to server:', enteredName);
+        console.log('Connected to server:', enteredName, 'in room:', enteredRoom);
     });
 
     socket.on('currentPlayers', (data) => {
@@ -172,6 +177,10 @@ function gameloop() {
         ctx.font = "18px Arial";
         ctx.fillText(p.name, p.x - 18, p.y - 18);
     }
+
+    ctx.fillStyle = "white";
+    ctx.font = "14px Arial";
+    ctx.fillText(`Room: ${roomName}`, 10, 20);
 
     requestAnimationFrame(gameloop);
 }

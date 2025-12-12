@@ -5,6 +5,7 @@ class Player {
         this.color = color || "#" + Math.floor(Math.random() * 16777215).toString(16);
         this.x = x || Math.floor(Math.random() * 500);
         this.y = y || Math.floor(Math.random() * 500);
+        this.room = null;
     }
 
     move(dx, dy) {
