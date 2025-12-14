@@ -7,17 +7,116 @@ let players = {};
 let myId = null;
 const speed = 5;
 
-let playerName = "";
-let roomName = "";
-
-const inputField = document.getElementById('nameInput');
-const roomInputField = document.getElementById('roomInput');
-const button = document.getElementById('startBtn');
-
 const chatInput = document.getElementById('chatInput');
 const sendButton = document.getElementById('sendBtn');
 
-button.addEventListener('click', connect);
+function gameUI() {
+    return {
+        screen: 'menu',
+        gameStarted: false,
+        playerName: '',
+        roomCode: '',
+
+        async showCreateRoom() {
+            if (this. playerName.trim() === '') {
+                alert('Bitte gib einen Namen ein!');
+                return;
+            }
+
+            try {
+                const res = await fetch('/createRoom');
+                const data = await res.json();
+                
+                this.roomCode = data.roomCode;
+                this. screen = 'createRoom';
+                
+                console.log('Room created:', this.roomCode);
+            } catch (error) {
+                alert('Fehler beim Erstellen des Raums! ');
+                console.error(error);
+            }
+        },
+
+        showJoinRoom() {
+            if (this.playerName.trim() === '') {
+                alert('Bitte gib einen Namen ein! ');
+                return;
+            }
+            this.screen = 'joinRoom';
+            this.roomCode = '';
+        },
+
+        joinRoom() {
+            if (this.roomCode.trim() === '') {
+                alert('Bitte gib einen Raumcode ein!');
+                return;
+            }
+            this.connect();
+        },
+
+        startGame() {
+            this.connect();
+        },
+
+        connect() {
+            const name = this.playerName.trim();
+            const room = this.roomCode.trim().toUpperCase();
+
+            console.log('=== CONNECTING ===');
+            console.log('Name:', name);
+            console. log('Room:', room);
+
+            socket = io({
+                auth: {
+                    name: name,
+                    room: room
+                }
+            });
+                
+            socket.on('connect', () => {
+                myId = socket.id;
+                this.gameStarted = true;
+                console.log('Connected to server:', name, 'in room:', room);
+            });
+        
+            socket.on('roomError', (msg) => {
+                alert(msg);
+                location.reload();
+            });
+        
+            socket.on('currentPlayers', (data) => {
+                players = data;
+            });
+        
+            socket.on('yourPlayer', (data) => {
+                players[data.id] = data;
+            });
+        
+            socket.on('newPlayer', (data) => {
+                players[data.id] = data;
+        
+                console.log('New player connected:', playerName);
+            });
+        
+            socket.on('chatMessage', (data) => {
+                const chat = document.getElementById('chatBox');
+                chat.innerHTML += `<div><span style="color:${data.color}">${data.name}:</span> ${data.message}</div>`;
+            })
+        
+            socket.on('playerMoved', (data) => {
+                if (players[data.id]) {
+                    players[data.id].x = data.x;
+                    players[data.id].y = data.y;
+                }
+            });
+        
+            socket.on('playerDisconnected', (id) => {
+                delete players[id];
+            });
+        }
+    }
+}
+
 sendButton.addEventListener('click', () => {
     sendMessage(chatInput.value);
     chatInput.value = "";
@@ -50,61 +149,6 @@ canvas.addEventListener('touchmove', (e) => {
 canvas.addEventListener('touchend', (e) => {
     input.up = input.down = input.left = input.right = false;
 });
-
-
-function connect() {
-    const enteredName = inputField.value.trim();
-    const enteredRoom = roomInputField.value.trim().toUpperCase();
-
-    if (enteredName === "") {
-        alert("Please enter a name to start the game.");
-        return;
-    }
-
-    playerName = enteredName;
-    roomName = enteredRoom || null;
-
-    socket = io({
-        auth: {
-            name: enteredName,
-            room: enteredRoom
-        }
-    });
-        
-    socket.on('connect', () => {
-        myId = socket.id;
-        console.log('Connected to server:', enteredName, 'in room:', enteredRoom);
-    });
-
-    socket.on('currentPlayers', (data) => {
-        players = data;
-    });
-
-    socket.on('newPlayer', (data) => {
-        players[data.id] = data;
-
-        console.log('New player connected:', playerName);
-    });
-
-    socket.on('chatMessage', (data) => {
-        const chat = document.getElementById('chatBox');
-        chat.innerHTML += `<div><span style="color:${data.color}">${data.name}:</span> ${data.message}</div>`;
-    })
-
-    socket.on('playerMoved', (data) => {
-        if (players[data.id]) {
-            players[data.id].x = data.x;
-            players[data.id].y = data.y;
-        }
-    });
-
-    socket.on('playerDisconnected', (id) => {
-        delete players[id];
-    });
-
-
-    document.getElementById('overlay').style.display = 'none';
-}
 
 function resizeCanvas() {
     if (isMobile()) {
@@ -178,9 +222,12 @@ function gameloop() {
         ctx.fillText(p.name, p.x - 18, p.y - 18);
     }
 
-    ctx.fillStyle = "white";
-    ctx.font = "14px Arial";
-    ctx.fillText(`Room: ${roomName}`, 10, 20);
+    if (socket && socket.auth) {
+        ctx.fillStyle = "white";
+        ctx.font = "14px Arial";
+        ctx.fillText(`Room: ${socket.auth.room}`, 10, 20);
+    }
+
 
     requestAnimationFrame(gameloop);
 }

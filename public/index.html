@@ -6,12 +6,44 @@
     <title>Online Game</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="style.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.15.2/dist/cdn.min.js"></script>
 </head>
 <body>
-    <div class="overlay" id="overlay">
-        <input id="nameInput" class="bg-white rounded p-4" placeholder="Wie lautet dein Name!" onkeydown="if (event.key === 'Enter') { connect(); }" />
-        <input id="roomInput" class="bg-white rounded p-4" placeholder="Raumcode (z.B E12345)" />
-        <button class="bg-teal-500 rounded p-4 text-white btn" id="startBtn">Bestätigen</button>
+    <div class="overlay" x-data="gameUI()" x-show="!gameStarted">
+        <div x-show="screen === 'menu'">
+            <input
+            class="bg-white rounded p-4"
+             placeholder="Wie lautet dein Name!" 
+             x-model="playerName"
+             />
+
+            <div>
+                <button class="bg-teal-500 rounded p-4 text-white btn" @click="showCreateRoom">Raum erstellen</button>
+                <button class="bg-teal-500 rounded p-4 text-white btn" @click="showJoinRoom">Raum beitreten</button>
+            </div>
+        </div>
+        
+
+        <!-- Join Room -->
+        <div x-show="screen === 'joinRoom'">
+            <input class="bg-white rounded p-4" placeholder="Raumcode (z.B E12345)" x-model="roomCode"
+            @keyup.enter="joinRoom" />
+            <div>
+                <button class="rounded p-4 text-white btn" @click="screen = 'menu'">Zurück</button>
+                <button class="bg-teal-500 rounded p-4 text-white btn" @click="joinRoom">Bestätigen</button>
+            </div>
+        </div>
+
+        <!-- Create Room -->
+        <div class="text-white" x-show="screen === 'createRoom'">
+            <p>Dein eigener Raumcode:</p>
+            <h2 class="text-2xl font-bold" x-text="roomCode"></h2>
+            <p>Teile Code um mit freunden zusammenzuspielen!</p>
+            <div>
+                <button class="rounded p-4 text-white btn" @click="screen = 'menu'">Zurück</button>
+                <button class="bg-teal-500 rounded p-4 text-white btn" @click="startGame">Bestätigen</button>
+            </div>
+        </div>
     </div>
 
     <!-- Game screen -->
